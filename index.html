@@ -121,6 +121,49 @@
         .tab.removing {
             animation: tabRemove 0.2s ease-out;
         }
+        .prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .prompt-box {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            width: 400px;
+            text-align: center;
+        }
+        .prompt-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .prompt-box button {
+            padding: 12px 24px;
+            background: #0a84ff;
+            border: none;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .prompt-box button:hover {
+            background: #007aff;
+        }
     </style>
     <script src="https://unpkg.com/monaco-editor@0.33.0/min/vs/loader.js"></script>
     <script>
@@ -166,7 +209,7 @@
                     addTab(tabData.title, tabData.content, tabData.id);
                 });
             } else {
-                addTab('New Tab 1');
+                addTab('New Tab 1', `--[[\n    Made by Cevor\n    https://discord.gg/fHVXHyKeBg\n]]`);
             }
         }
 
@@ -187,6 +230,7 @@
                 const newTitle = titleElement.textContent.trim();
                 if (newTitle) {
                     tab.title = newTitle;
+                    saveTabs();
                 } else {
                     titleElement.textContent = tab.title;
                 }
@@ -246,10 +290,35 @@
             const newTabButton = document.createElement('div');
             newTabButton.className = 'tab new-tab';
             newTabButton.innerHTML = '+';
-            newTabButton.onclick = () => {
-                const newTab = addTab('New Tab ' + (tabs.length + 1));
-            };
+            newTabButton.onclick = () => showPrompt();
             return newTabButton;
+        }
+
+        function showPrompt() {
+            const overlay = document.createElement('div');
+            overlay.className = 'prompt-overlay';
+
+            const promptBox = document.createElement('div');
+            promptBox.className = 'prompt-box';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Enter tab name';
+
+            const button = document.createElement('button');
+            button.textContent = 'Create';
+            button.onclick = () => {
+                const tabName = input.value.trim() || 'New Tab';
+                addTab(tabName, `--[[\n    Made by Cevor\n    https://discord.gg/fHVXHyKeBg\n]]`);
+                overlay.remove();
+            };
+
+            promptBox.appendChild(input);
+            promptBox.appendChild(button);
+            overlay.appendChild(promptBox);
+            document.body.appendChild(overlay);
+
+            input.focus();
         }
 
         function addTab(title, content = '', id = null) {
@@ -349,7 +418,6 @@
                         endColumn: word.endColumn,
                     };
 
-                    // Filter proposals based on the current word
                     const filteredProposals = Proposals.filter(proposal =>
                         proposal.label.toLowerCase().startsWith(word.word.toLowerCase())
                     );
@@ -364,7 +432,7 @@
                         })),
                     };
                 },
-                triggerCharacters: [], // No specific trigger characters
+                triggerCharacters: [],
             });
 
             monaco.editor.defineTheme('net-theme-dark', {
@@ -380,8 +448,8 @@
                     { token: 'number', foreground: 'f99157' },
                     { token: 'string', foreground: '99CC99' },
                     { token: 'Method', foreground: 'ffa1dc' },
-                    { token: 'print', foreground: '00ff00', fontStyle: "bold" }, // Custom color for 'print'
-                    { token: 'if', foreground: 'ff6a00', fontStyle: "bold" }, // Custom color for 'if'
+                    { token: 'print', foreground: '00ff00', fontStyle: "bold" },
+                    { token: 'if', foreground: 'ff6a00', fontStyle: "bold" },
                 ]
             });
 
@@ -390,11 +458,11 @@
                 theme: "net-theme-dark",
                 acceptSuggestionOnEnter: "smart",
                 cursorSmoothCaretAnimation: true,
-                suggestOnTriggerCharacters: false, // Disable trigger characters
+                suggestOnTriggerCharacters: false,
                 suggestSelection: "recentlyUsed",
                 folding: true,
                 dragAndDrop: true,
-                links: true, // Enable links
+                links: true,
                 minimap: { enabled: false },
                 showFoldingControls: "always",
                 smoothScrolling: true,
@@ -409,7 +477,6 @@
                 padding: { top: 24 }
             });
 
-            // Handle Ctrl + Click on links
             editor.onMouseDown((e) => {
                 if (e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT && e.event.ctrlKey) {
                     const link = e.target.element?.getAttribute('href');
@@ -426,7 +493,6 @@
                 editor.layout();
             };
 
-            // Disable error marking for specific keywords
             editor.onDidChangeModelContent(function (e) {
                 const model = editor.getModel();
                 const value = model.getValue();
@@ -435,10 +501,8 @@
                 const markers = [];
                 lines.forEach((line, lineNumber) => {
                     if (line.includes('print') || line.includes('if')) {
-                        // Do not mark these lines as errors
                         return;
                     }
-                    // Add your custom error marking logic here if needed
                 });
 
                 monaco.editor.setModelMarkers(model, 'luaparse', markers);
@@ -498,7 +562,6 @@
             load();
         });
 
-        // Expose functions to the global scope for C++ interaction
         window.GetText = function () {
             return editor.getValue();
         };
