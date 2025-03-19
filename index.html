@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monaco Editor with Ctrl + Click Links</title>
+    <title>Monaco Editor with Custom Code Colors</title>
     <style>
         html, body {
             width: 100%;
@@ -497,6 +497,15 @@
             }
             load();
         });
+
+        // Expose functions to the global scope for C++ interaction
+        window.GetText = function () {
+            return editor.getValue();
+        };
+
+        window.SetText = function (text) {
+            editor.setValue(text);
+        };
     </script>
 </body>
 </html>
