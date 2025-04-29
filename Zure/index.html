@@ -193,6 +193,32 @@
     ]
 });
 
+
+
+            editor = monaco.editor.create(document.getElementById('container'), {
+                language: 'lua',
+                theme: "net-theme-dark",
+                acceptSuggestionOnEnter: "smart",
+                cursorSmoothCaretAnimation: true,
+                suggestOnTriggerCharacters: false,
+                suggestSelection: "recentlyUsed",
+                folding: true,
+                dragAndDrop: true,
+                links: true,
+                minimap: { enabled: false },
+                showFoldingControls: "always",
+                smoothScrolling: true,
+                stopRenderingLineAfter: 6500,
+                cursorBlinking: "smooth",
+                cursorSmoothCaretAnimation: true,
+                foldingHighlight: false,
+                fontLigatures: true,
+                formatOnPaste: true,
+                showDeprecated: true,
+                suggest: { snippetsPreventQuickSuggestions: false },
+                padding: { top: 24 }
+            });
+
                 // Configure Lua language
                 monaco.languages.register({ id: 'lua' });
                 monaco.languages.setLanguageConfiguration('lua', {
