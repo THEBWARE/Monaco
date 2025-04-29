@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eclipse Editor</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1e1e1e;
+            color: white;
+            font-family: 'Segoe UI';
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #tabs-header {
+            display: flex;
+            background: #252526;
+            padding-left: 10px;
+            align-items: center;
+            height: 35px;
+        }
+        .tabs-container {
+            display: flex;
+            flex-grow: 1;
+            overflow-x: auto;
+        }
+        .tabs {
+            display: flex;
+        }
+        .tab {
+            padding: 8px 15px;
+            background: #2d2d2d;
+            margin-right: 2px;
+            cursor: pointer;
+            border-top: 2px solid #7e22ce;
+            display: flex;
+            align-items: center;
+            min-width: 100px;
+            max-width: 200px;
+            position: relative;
+            user-select: none;
+        }
+        .tab.active {
+            background: #1e1e1e;
+        }
+        .tab-name {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tab-close {
+            margin-left: 8px;
+            color: #888;
+        }
+        .tab-close:hover {
+            color: white;
+        }
+        #add-tab {
+            padding: 8px 12px;
+            background: #252526;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 5px;
+            flex-shrink: 0;
+        }
+        #add-tab:hover {
+            background: #333;
+        }
+        #container {
+            width: 100%;
+            flex-grow: 1;
+            overflow: hidden;
+            display: none; /* Hidden by default */
+        }
+        #empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #888;
+            font-size: 16px;
+        }
+        #create-first-tab {
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #7e22ce;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #create-first-tab:hover {
+            background: #9333ea;
+        }
+        .context-menu {
+            position: absolute;
+            background: #252526;
+            border: 1px solid #444;
+            z-index: 1000;
+            min-width: 150px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        .context-menu-item {
+            padding: 5px 15px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .context-menu-item:hover {
+            background-color: #094771;
+        }
+        .context-menu-separator {
+            height: 1px;
+            background-color: #454545;
+            margin: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="tabs-header">
+        <div class="tabs-container">
+            <div class="tabs" id="tabs"></div>
+            <button id="add-tab">+</button>
+        </div>
+    </div>
+    <div id="container"></div>
+    <div id="empty-state">
+        <p>No tabs open</p>
+        <button id="create-first-tab">Create New Tab</button>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu" style="display:none">
+        <div class="context-menu-item" id="ctxNewTab">New Tab</div>
+        <div class="context-menu-item" id="ctxCloseTab">Close Tab</div>
+        <div class="context-menu-item" id="ctxCloseOtherTabs">Close Other Tabs</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" id="ctxRenameTab">Rename Tab</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" id="ctxCopyContent">Copy Content</div>
+        <div class="context-menu-item" id="ctxPasteContent">Paste Content</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/loader.min.js"></script>
+    <script>
+        require.config({ 
+            paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs' },
+            'vs/nls': { availableLanguages: { '*': 'en' } }
+        });
+        
+        let editor;
+        let tabCounter = 1;
+        const tabsContainer = document.getElementById('tabs');
+        const files = {};
+        let contextMenuTabId = null;
+
+        // Initialize the editor when first tab is created
+        function initializeEditor() {
+            require(['vs/editor/editor.main'], function() {
+                // Define theme
+            monaco.editor.defineTheme('net-theme-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    colors: {
+        "editor.background": '#111111', // Changed from #0f0f0f to #111111
+    },
+    rules: [
+        { token: 'global', foreground: 'fb9767', fontStyle: "bold" },
+        { token: 'keyword', foreground: 'fb9767', fontStyle: "bold" },
+        { token: 'comment', foreground: 'fed767', fontStyle: "bold" },
+        { token: 'number', foreground: 'a0d26e', fontStyle: "bold" },
+        { token: 'string', foreground: '77dbe7', fontStyle: "bold" },
+        { token: 'Method', foreground: 'ff6699' },
+        { token: 'operator', foreground: 'ff5555' },
+        { token: 'type', foreground: 'ffdd66' },
+        { token: 'variable', foreground: 'aaffff' },
+        { token: 'variable.predefined', foreground: 'aaffff', fontStyle: "italic" },
+        { token: 'constant', foreground: 'd48aff' },
+        { token: 'class', foreground: 'ff3333', fontStyle: "bold" },
+        { token: 'interface', foreground: 'ffcc66', fontStyle: "italic" },
+        { token: 'function', foreground: 'b266ff', fontStyle: "bold" },
+        { token: 'label', foreground: '66ff66', fontStyle: "italic" },
+        { token: 'predefined.type', foreground: 'ffaa33' },
+        { token: 'punctuation.bracket', foreground: 'ff33cc' },
+        { token: 'print', foreground: '00ff00', fontStyle: "bold" },
+        { token: 'if', foreground: 'ff6a00', fontStyle: "bold" }
+    ]
+});
+
+                // Configure Lua language
+                monaco.languages.register({ id: 'lua' });
+                monaco.languages.setLanguageConfiguration('lua', {
+                    brackets: [
+                        ['{', '}'],
+                        ['[', ']'],
+                        ['(', ')']
+                    ],
+                    autoClosingPairs: [
+                        { open: '{', close: '}' },
+                        { open: '[', close: ']' },
+                        { open: '(', close: ')' },
+                        { open: '"', close: '"' },
+                        { open: "'", close: "'" },
+                        { open: '--[[', close: ']]' }
+                    ],
+                    surroundingPairs: [
+                        { open: '{', close: '}' },
+                        { open: '[', close: ']' },
+                        { open: '(', close: ')' },
+                        { open: '"', close: '"' },
+                        { open: "'", close: "'" }
+                    ]
+                });
+
+                // Register completion item provider for Lua
+                monaco.languages.registerCompletionItemProvider('lua', {
+                    provideCompletionItems: function(model, position) {
+                        const suggestions = [
+                            // Lua keywords
+                            { label: 'and', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'and' },
+                            { label: 'break', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'break' },
+                            { label: 'do', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'do' },
+                            { label: 'else', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'else' },
+                            { label: 'elseif', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'elseif' },
+                            { label: 'end', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'end' },
+                            { label: 'false', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'false' },
+                            { label: 'for', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'for' },
+                            { label: 'function', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'function' },
+                            { label: 'if', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'if' },
+                            { label: 'in', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'in' },
+                            { label: 'local', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'local' },
+                            { label: 'nil', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'nil' },
+                            { label: 'not', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'not' },
+                            { label: 'or', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'or' },
+                            { label: 'repeat', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'repeat' },
+                            { label: 'return', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'return' },
+                            { label: 'then', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'then' },
+                            { label: 'true', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'true' },
+                            { label: 'until', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'until' },
+                            { label: 'while', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'while' },
+                            
+                            // Lua standard library
+                            { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:message})', documentation: 'Prints a message to the output' },
+                            { label: 'table.concat', kind: monaco.languages.CompletionItemKind.Method, insertText: 'table.concat(${1:table}, ${2:sep})', documentation: 'Concatenates table elements with separator' },
+                            { label: 'table.insert', kind: monaco.languages.CompletionItemKind.Method, insertText: 'table.insert(${1:table}, ${2:value})', documentation: 'Inserts a value into a table' },
+                            { label: 'string.sub', kind: monaco.languages.CompletionItemKind.Method, insertText: 'string.sub(${1:string}, ${2:start}, ${3:end})', documentation: 'Returns a substring' },
+                            
+                            // Common Lua patterns
+                            { label: 'function', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'function ${1:name}(${2:params})\n\t${3:body}\nend', documentation: 'Function declaration' },
+                            { label: 'fori', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'for ${1:i} = ${2:1}, ${3:10} do\n\t${4:body}\nend', documentation: 'Numeric for loop' },
+                            { label: 'forp', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'for ${1:k}, ${2:v} in pairs(${3:table}) do\n\t${4:body}\nend', documentation: 'Pairs for loop' },
+                            { label: 'if', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'if ${1:condition} then\n\t${2:body}\nend', documentation: 'If statement' },
+                            
+                            // Roblox-specific
+                            { label: 'game', kind: monaco.languages.CompletionItemKind.Class, insertText: 'game', documentation: 'Roblox game service' },
+                            { label: 'workspace', kind: monaco.languages.CompletionItemKind.Class, insertText: 'workspace', documentation: 'Roblox workspace service' },
+                            { label: 'Instance.new', kind: monaco.languages.CompletionItemKind.Method, insertText: 'Instance.new("${1:className}")', documentation: 'Creates a new Roblox instance' },
+                            { label: 'Vector3.new', kind: monaco.languages.CompletionItemKind.Method, insertText: 'Vector3.new(${1:x}, ${2:y}, ${3:z})', documentation: 'Creates a new Vector3' }
+                        ];
+
+                        // Filter suggestions based on current word
+                        const word = model.getWordUntilPosition(position);
+                        const range = {
+                            startLineNumber: position.lineNumber,
+                            endLineNumber: position.lineNumber,
+                            startColumn: word.startColumn,
+                            endColumn: word.endColumn
+                        };
+
+                        return {
+                            suggestions: suggestions.map(suggestion => ({
+                                ...suggestion,
+                                range: range,
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet
+                            }))
+                        };
+                    },
+                    triggerCharacters: ['.', ':']
+                });
+
+                // Create editor instance
+                editor = monaco.editor.create(document.getElementById('container'), {
+                    language: 'lua',
+                    theme: 'eclipseTheme',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    fontFamily: 'Consolas, "Courier New", monospace',
+                    minimap: { enabled: false },
+                    smoothScrolling: true,
+                    cursorSmoothCaretAnimation: 'on',
+                    cursorBlinking: 'smooth',
+                    mouseWheelZoom: true,
+                    scrollBeyondLastLine: false,
+                    renderLineHighlight: 'all',
+                    quickSuggestions: {
+                        other: true,
+                        comments: false,
+                        strings: true
+                    },
+                    suggestOnTriggerCharacters: true,
+                    tabCompletion: 'on',
+                    wordBasedSuggestions: true,
+                    parameterHints: {
+                        enabled: true
+                    },
+                    autoIndent: 'full',
+                    formatOnType: true,
+                    formatOnPaste: true,
+                    suggest: {
+                        localityBonus: true,
+                        shareSuggestSelections: true,
+                        showIcons: true,
+                        preview: true,
+                        snippetsPreventQuickSuggestions: false
+                    },
+                    padding: { top: 24 }
+                });
+
+                // Track editor content changes
+                editor.onDidChangeModelContent(() => {
+                    const currentFile = document.querySelector('.tab.active')?.dataset.file;
+                    if (currentFile) {
+                        files[currentFile] = editor.getValue();
+                    }
+                });
+            });
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('container').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'flex';
+        }
+
+        // Hide empty state
+        function hideEmptyState() {
+            document.getElementById('container').style.display = 'block';
+            document.getElementById('empty-state').style.display = 'none';
+        }
+
+        // Add new tab
+        function addTab(filename, content = '', focusEditor = true) {
+            // Initialize editor if it doesn't exist
+            if (!editor) {
+                initializeEditor();
+            }
+
+            files[filename] = content || '';
+
+            const tab = document.createElement('div');
+            tab.className = 'tab';
+            tab.dataset.file = filename;
+            tab.innerHTML = `
+                <span class="tab-name">${filename}</span>
+                <span class="tab-close">×</span>
+            `;
+            tabsContainer.appendChild(tab);
+
+            // Tab click event
+            tab.addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-close')) {
+                    closeTab(filename);
+                } else {
+                    switchTab(filename);
+                }
+            });
+
+            // Tab rename on double click
+            tab.addEventListener('dblclick', () => {
+                renameTab(tab);
+            });
+
+            // Right-click context menu
+            tab.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showContextMenu(e, filename);
+            });
+
+            // Switch to the new tab
+            switchTab(filename, focusEditor);
+            
+            // Hide empty state
+            hideEmptyState();
+            
+            return tab;
+        }
+
+        // Switch tab
+        function switchTab(filename, focusEditor = true) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const tab = document.querySelector(`.tab[data-file="${filename}"]`);
+            if (tab) {
+                tab.classList.add('active');
+            }
+            
+            if (editor) {
+                editor.setValue(files[filename] || '');
+                if (focusEditor) {
+                    editor.focus();
+                }
+            }
+        }
+
+        // Close tab
+        function closeTab(filename) {
+            if (Object.keys(files).length <= 1) {
+                // Last tab - close everything
+                delete files[filename];
+                document.querySelector(`.tab[data-file="${filename}"]`).remove();
+                showEmptyState();
+                return;
+            }
+            
+            const tab = document.querySelector(`.tab[data-file="${filename}"]`);
+            const wasActive = tab.classList.contains('active');
+            
+            delete files[filename];
+            tab.remove();
+            
+            if (wasActive) {
+                const remainingTabs = document.querySelectorAll('.tab');
+                if (remainingTabs.length > 0) {
+                    const newActive = remainingTabs[0].dataset.file;
+                    switchTab(newActive);
+                }
+            }
+        }
+
+        // Rename tab
+        function renameTab(tabElement) {
+            const tabName = tabElement.querySelector('.tab-name');
+            const oldFilename = tabElement.dataset.file;
+            const currentName = tabName.textContent;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.style.width = `${tabName.offsetWidth}px`;
+            input.style.backgroundColor = '#1e1e1e';
+            input.style.color = 'white';
+            input.style.border = '1px solid #7e22ce';
+            input.style.padding = '2px';
+            input.style.margin = '0';
+            input.style.fontFamily = 'inherit';
+            input.style.fontSize = 'inherit';
+            
+            tabName.replaceWith(input);
+            input.focus();
+            
+            function finishRename() {
+                const newName = input.value.trim() || currentName;
+                if (newName !== currentName) {
+                    files[newName] = files[oldFilename];
+                    delete files[oldFilename];
+                    tabElement.dataset.file = newName;
+                }
+                
+                const newSpan = document.createElement('span');
+                newSpan.className = 'tab-name';
+                newSpan.textContent = newName;
+                input.replaceWith(newSpan);
+            }
+            
+            input.addEventListener('blur', finishRename);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') finishRename();
+            });
+        }
+
+        // Context Menu Functions
+        function showContextMenu(e, tabId) {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenuTabId = tabId;
+            
+            // Position the menu
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = `${e.pageX}px`;
+            contextMenu.style.top = `${e.pageY}px`;
+            
+            // Disable "Close Tab" if only one tab exists
+            document.getElementById('ctxCloseTab').style.opacity = Object.keys(files).length > 1 ? '1' : '0.5';
+            document.getElementById('ctxCloseTab').style.pointerEvents = Object.keys(files).length > 1 ? 'auto' : 'none';
+            
+            // Disable "Close Other Tabs" if only one tab exists
+            document.getElementById('ctxCloseOtherTabs').style.opacity = Object.keys(files).length > 1 ? '1' : '0.5';
+            document.getElementById('ctxCloseOtherTabs').style.pointerEvents = Object.keys(files).length > 1 ? 'auto' : 'none';
+            
+            return false;
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function setupContextMenu() {
+            // Hide menu when clicking elsewhere
+            document.addEventListener('click', hideContextMenu);
+            
+            // Context menu actions
+            document.getElementById('ctxNewTab').addEventListener('click', () => {
+                const filename = `script${tabCounter++}.lua`;
+                addTab(filename);
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxCloseTab').addEventListener('click', () => {
+                if (Object.keys(files).length > 1 && contextMenuTabId) {
+                    closeTab(contextMenuTabId);
+                }
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxCloseOtherTabs').addEventListener('click', () => {
+                if (Object.keys(files).length > 1 && contextMenuTabId) {
+                    // Create a copy of the filenames to avoid modification during iteration
+                    const filenames = Object.keys(files);
+                    for (const filename of filenames) {
+                        if (filename !== contextMenuTabId) {
+                            closeTab(filename);
+                        }
+                    }
+                }
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxRenameTab').addEventListener('click', () => {
+                if (contextMenuTabId) {
+                    const tab = document.querySelector(`.tab[data-file="${contextMenuTabId}"]`);
+                    if (tab) {
+                        renameTab(tab);
+                    }
+                }
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxCopyContent').addEventListener('click', () => {
+                if (contextMenuTabId && files[contextMenuTabId]) {
+                    navigator.clipboard.writeText(files[contextMenuTabId]);
+                }
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxPasteContent').addEventListener('click', async () => {
+                if (contextMenuTabId) {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        files[contextMenuTabId] = text;
+                        if (document.querySelector('.tab.active')?.dataset.file === contextMenuTabId) {
+                            editor.setValue(text);
+                        }
+                    } catch (err) {
+                        console.error('Failed to read clipboard:', err);
+                    }
+                }
+                hideContextMenu();
+            });
+        }
+
+        // Event listeners
+        document.getElementById('add-tab').addEventListener('click', () => {
+            const filename = `script${tabCounter++}.lua`;
+            addTab(filename);
+        });
+
+        document.getElementById('create-first-tab').addEventListener('click', () => {
+            const filename = `script${tabCounter++}.lua`;
+            addTab(filename);
+        });
+
+        // Setup context menu
+        setupContextMenu();
+
+        // Show empty state initially
+        window.addEventListener('DOMContentLoaded', () => {
+            showEmptyState();
+        });
+    </script>
+</body>
+</html>
