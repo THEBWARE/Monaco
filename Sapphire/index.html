@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -192,7 +190,7 @@
     </div>
     
     <div class="footer">
-        Made by <a href="https://discord.gg/hkQeuC9BAT" target="_blank">Vortex</a>
+        Made by <a href="https://discord.gg/NeKzrdK7qX" target="_blank">Vortex</a>
     </div>
 
     <script>
@@ -230,7 +228,7 @@
                     addTab(tabData.title, tabData.content, tabData.id);
                 });
             } else {
-                addTab('New Tab 1', `--[[\n    Made by Vortex\n    https://discord.gg/hkQeuC9BAT\n]]`);
+                addTab('New Tab 1', `--[[\n    Made by Vortex\n    https://discord.gg/NeKzrdK7qX\n]]`);
             }
         }
 
@@ -317,7 +315,7 @@
             newTabButton.className = 'tab new-tab';
             newTabButton.innerHTML = '+';
             newTabButton.onclick = () => {
-                const newTab = addTab('New Tab', `--[[\n    Made by Vortex\n    https://discord.gg/hkQeuC9BAT\n]]`);
+                const newTab = addTab('New Tab', `--[[\n    Made by Vortex\n    https://discord.gg/NeKzrdK7qX\n]]`);
                 // Automatically make the title editable for new tabs
                 const titleElement = newTab.element.querySelector('.tab-title');
                 makeEditable(titleElement, newTab);
@@ -438,7 +436,7 @@
             
             // Context menu actions
             document.getElementById('ctxNewTab').addEventListener('click', () => {
-                const newTab = addTab('New Tab', `--[[\n    Made by Vortex\n    https://discord.gg/hkQeuC9BAT\n]]`);
+                const newTab = addTab('New Tab', `--[[\n    Made by Vortex\n    https://discord.gg/NeKzrdK7qX\n]]`);
                 hideContextMenu();
             });
             
