@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monaco Editor by Sapphire</title>
+    <title>Monaco Editor by Vortex</title>
     <style>
         html, body {
             width: 100%;
@@ -192,7 +192,7 @@
     </div>
     
     <div class="footer">
-        Made by <a href="https://discord.gg/hkQeuC9BAT" target="_blank">Sapphire</a>
+        Made by <a href="https://discord.gg/hkQeuC9BAT" target="_blank">Vortex</a>
     </div>
 
     <script>
@@ -230,7 +230,7 @@
                     addTab(tabData.title, tabData.content, tabData.id);
                 });
             } else {
-                addTab('New Tab 1', `--[[\n    Made by Sapphire\n    https://discord.gg/hkQeuC9BAT\n]]`);
+                addTab('New Tab 1', `--[[\n    Made by Vortex\n    https://discord.gg/hkQeuC9BAT\n]]`);
             }
         }
 
@@ -317,7 +317,7 @@
             newTabButton.className = 'tab new-tab';
             newTabButton.innerHTML = '+';
             newTabButton.onclick = () => {
-                const newTab = addTab('New Tab', `--[[\n    Made by Sapphire\n    https://discord.gg/hkQeuC9BAT\n]]`);
+                const newTab = addTab('New Tab', `--[[\n    Made by Vortex\n    https://discord.gg/hkQeuC9BAT\n]]`);
                 // Automatically make the title editable for new tabs
                 const titleElement = newTab.element.querySelector('.tab-title');
                 makeEditable(titleElement, newTab);
@@ -438,7 +438,7 @@
             
             // Context menu actions
             document.getElementById('ctxNewTab').addEventListener('click', () => {
-                const newTab = addTab('New Tab', `--[[\n    Made by Sapphire\n    https://discord.gg/hkQeuC9BAT\n]]`);
+                const newTab = addTab('New Tab', `--[[\n    Made by Vortex\n    https://discord.gg/hkQeuC9BAT\n]]`);
                 hideContextMenu();
             });
             
