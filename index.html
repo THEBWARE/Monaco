@@ -6,20 +6,20 @@
     <title>Monaco Editor by Cevor</title>
     <style>
         :root {
-            --bg-color: #1e1e1e;
-            --tab-bg: #252526;
-            --tab-active-bg: #2d2d2d;
-            --tab-hover-bg: #3a3a3a;
+            --bg-color: #0d0d0d;
+            --tab-bg: #1a1a1a;
+            --tab-active-bg: #252525;
+            --tab-hover-bg: #2a2a2a;
             --tab-text: #d4d4d4;
             --tab-active-text: #ffffff;
-            --border-color: #454545;
+            --border-color: #333333;
             --accent-color: #007acc;
             --highlight-color: #094771;
-            --context-menu-bg: #252526;
+            --context-menu-bg: #1a1a1a;
             --footer-text: #858585;
             --status-bar-bg: #007acc10;
-            --scrollbar-thumb: #424242;
-            --scrollbar-track: #2d2d2d;
+            --scrollbar-thumb: #333333;
+            --scrollbar-track: #1a1a1a;
         }
         
         html, body {
@@ -277,7 +277,7 @@
             color: var(--footer-text);
             font-size: 11px;
             z-index: 1000;
-            background-color: rgba(30, 30, 30, 0.7);
+            background-color: rgba(13, 13, 13, 0.7);
             padding: 4px 8px;
             border-radius: 3px;
             backdrop-filter: blur(2px);
@@ -941,9 +941,9 @@
                 base: 'vs-dark',
                 inherit: true,
                 colors: {
-                    "editor.background": '#1e1e1e',
+                    "editor.background": '#0d0d0d',
                     "editor.foreground": '#d4d4d4',
-                    "editor.lineHighlightBackground": '#282828',
+                    "editor.lineHighlightBackground": '#1a1a1a',
                     "editorLineNumber.foreground": '#5a5a5a',
                     "editorLineNumber.activeForeground": '#c6c6c6',
                     "editorCursor.foreground": '#ffffff',
@@ -960,13 +960,13 @@
                     "editorLink.activeForeground": '#4e94ce',
                     "editor.rangeHighlightBackground": '#ffffff0b',
                     "editorWhitespace.foreground": '#e3e4e229',
-                    "editorWidget.background": '#252526',
-                    "editorWidget.border": '#454545',
-                    "editorSuggestWidget.background": '#252526',
-                    "editorSuggestWidget.border": '#454545',
+                    "editorWidget.background": '#1a1a1a',
+                    "editorWidget.border": '#333333',
+                    "editorSuggestWidget.background": '#1a1a1a',
+                    "editorSuggestWidget.border": '#333333',
                     "editorSuggestWidget.selectedBackground": '#2a2d2e',
-                    "editorHoverWidget.background": '#252526',
-                    "editorHoverWidget.border": '#454545',
+                    "editorHoverWidget.background": '#1a1a1a',
+                    "editorHoverWidget.border": '#333333',
                 },
                 rules: [
                     { token: 'global', foreground: 'fb9767', fontStyle: "bold" },
