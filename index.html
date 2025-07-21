@@ -5,100 +5,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monaco Editor by Cevor</title>
     <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --tab-bg: #252526;
+            --tab-active-bg: #2d2d2d;
+            --tab-hover-bg: #3a3a3a;
+            --tab-text: #d4d4d4;
+            --tab-active-text: #ffffff;
+            --border-color: #454545;
+            --accent-color: #007acc;
+            --highlight-color: #094771;
+            --context-menu-bg: #252526;
+            --footer-text: #858585;
+            --status-bar-bg: #007acc10;
+            --scrollbar-thumb: #424242;
+            --scrollbar-track: #2d2d2d;
+        }
+        
         html, body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden;
+            font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
         }
+        
         .editor-container {
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
+            background-color: var(--bg-color);
         }
+        
         .tabs-container {
-            background-color: #0f0f0f;
+            background-color: var(--tab-bg);
             display: flex;
-            height: 35px;
+            height: 36px;
             overflow-x: auto;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--border-color);
             gap: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
+        
+        .tabs-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .tabs-container::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+        
+        .tabs-container::-webkit-scrollbar-thumb {
+            background-color: var(--scrollbar-thumb);
+            border-radius: 2px;
+        }
+        
         .tab {
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            background-color: #0f0f0f;
-            color: #969696;
-            border-right: 1px solid #1F1F1F;
-            min-width: 120px;
+            padding: 0 16px;
+            background-color: var(--tab-bg);
+            color: var(--tab-text);
+            border-right: 1px solid var(--border-color);
+            min-width: 140px;
             max-width: 200px;
             position: relative;
             cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
+            transition: all 0.2s ease;
             user-select: none;
+            height: 100%;
         }
+        
+        .tab:hover {
+            background-color: var(--tab-hover-bg);
+        }
+        
         .tab.active {
-            background-color: #0C0C0C;
-            color: #ffffff;
+            background-color: var(--tab-active-bg);
+            color: var(--tab-active-text);
+            border-top: 2px solid var(--accent-color);
         }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: var(--tab-active-bg);
+            z-index: 1;
+        }
+        
         .tab-icon {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             margin-right: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            top: 2px;
         }
+        
         .tab-icon img {
-            width: 16px;
-            height: 16px;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
+        
         .tab-title {
             flex-grow: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 11px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
         }
+        
         .tab-title.editing {
-            background: #3d3d3d;
-            border: 1px solid #525252;
+            background: var(--tab-hover-bg);
+            border: 1px solid var(--accent-color);
             padding: 2px 4px;
             border-radius: 3px;
             outline: none;
+            margin-right: 8px;
         }
+        
         .tab-close {
             margin-left: 8px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
+            opacity: 0.5;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             width: 16px;
             height: 16px;
             border-radius: 3px;
+            font-size: 12px;
         }
+        
+        .tab:hover .tab-close {
+            opacity: 0.8;
+        }
+        
         .tab-close:hover {
             opacity: 1;
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
         }
+        
         .tab.new-tab {
-            min-width: 10px;
-            max-width: 10px;
+            min-width: 40px;
+            max-width: 40px;
             justify-content: center;
             background-color: transparent;
             border: none;
-            margin-left: -2px;
+            padding: 0;
+            color: var(--tab-text);
+            transition: all 0.2s;
         }
+        
         .tab.new-tab:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: var(--tab-hover-bg);
+            color: var(--tab-active-text);
         }
+        
         @keyframes tabAppear {
             from {
                 opacity: 0;
@@ -109,15 +182,18 @@
                 transform: translateY(0);
             }
         }
+        
         @keyframes tabRemove {
             to {
                 opacity: 0;
                 transform: translateX(-10px);
             }
         }
+        
         .tab.new {
             animation: tabAppear 0.2s ease-out;
         }
+        
         .tab.removing {
             animation: tabRemove 0.2s ease-out;
         }
@@ -125,47 +201,165 @@
         /* Context Menu */
         .context-menu {
             position: absolute;
-            background-color: #252526;
-            border: 1px solid #454545;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            background-color: var(--context-menu-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            min-width: 150px;
+            min-width: 200px;
             display: none;
+            border-radius: 4px;
+            overflow: hidden;
+            padding: 4px 0;
         }
+        
         .context-menu-item {
-            padding: 5px 15px;
-            color: #e0e0e0;
+            padding: 8px 16px;
+            color: var(--tab-active-text);
             cursor: pointer;
             font-size: 12px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.1s ease;
         }
+        
         .context-menu-item:hover {
-            background-color: #094771;
+            background-color: var(--highlight-color);
         }
+        
+        .context-menu-item i {
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+            font-size: 12px;
+        }
+        
         .context-menu-separator {
             height: 1px;
-            background-color: #454545;
-            margin: 3px 0;
+            background-color: var(--border-color);
+            margin: 4px 0;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background-color: var(--status-bar-bg);
+            height: 24px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 11px;
+            color: var(--tab-text);
+            border-top: 1px solid var(--border-color);
+            justify-content: space-between;
+        }
+        
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-item {
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-item i {
+            margin-right: 6px;
+            font-size: 12px;
+            color: var(--accent-color);
         }
         
         /* Footer */
         .footer {
             position: absolute;
-            bottom: 5px;
+            bottom: 2px;
             right: 10px;
-            color: #666;
-            font-size: 12px;
+            color: var(--footer-text);
+            font-size: 11px;
             z-index: 1000;
+            background-color: rgba(30, 30, 30, 0.7);
+            padding: 4px 8px;
+            border-radius: 3px;
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
         }
+        
         .footer a {
-            color: #888;
+            color: var(--accent-color);
             text-decoration: none;
+            font-weight: 500;
+            margin-left: 4px;
+            display: flex;
+            align-items: center;
         }
+        
         .footer a:hover {
-            color: #aaa;
             text-decoration: underline;
         }
+        
+        .footer a i {
+            margin-left: 4px;
+            font-size: 10px;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1001;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            white-space: nowrap;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 40px;
+            right: 20px;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            z-index: 1002;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification i {
+            margin-right: 8px;
+        }
+        
+        /* Scrollbar for editor */
+        .monaco-scrollable-element .scrollbar.vertical .slider {
+            background: var(--scrollbar-thumb) !important;
+            border-radius: 3px !important;
+        }
+        
+        .monaco-scrollable-element .scrollbar.horizontal .slider {
+            background: var(--scrollbar-thumb) !important;
+            border-radius: 3px !important;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/monaco-editor@0.33.0/min/vs/loader.js"></script>
     <script>
         require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@0.33.0/min/vs' }});
@@ -174,23 +368,79 @@
 <body>
     <div class="editor-container">
         <div id="tabs-container" class="tabs-container"></div>
-        <div id="container" style="width:100%;height:calc(100% - 35px);"></div>
+        <div id="container" style="width:100%;height:calc(100% - 60px);"></div>
         
         <!-- Context Menu -->
         <div id="contextMenu" class="context-menu">
-            <div class="context-menu-item" id="ctxNewTab">New Tab</div>
-            <div class="context-menu-item" id="ctxCloseTab">Close Tab</div>
-            <div class="context-menu-item" id="ctxCloseOtherTabs">Close Other Tabs</div>
+            <div class="context-menu-item" id="ctxNewTab">
+                <i class="fas fa-plus"></i> New Tab
+            </div>
+            <div class="context-menu-item" id="ctxDuplicateTab">
+                <i class="fas fa-copy"></i> Duplicate Tab
+            </div>
             <div class="context-menu-separator"></div>
-            <div class="context-menu-item" id="ctxRenameTab">Rename Tab</div>
+            <div class="context-menu-item" id="ctxCloseTab">
+                <i class="fas fa-times"></i> Close Tab
+            </div>
+            <div class="context-menu-item" id="ctxCloseOtherTabs">
+                <i class="fas fa-times-circle"></i> Close Other Tabs
+            </div>
+            <div class="context-menu-item" id="ctxCloseRightTabs">
+                <i class="fas fa-arrow-right"></i> Close Tabs to the Right
+            </div>
             <div class="context-menu-separator"></div>
-            <div class="context-menu-item" id="ctxCopyContent">Copy Content</div>
-            <div class="context-menu-item" id="ctxPasteContent">Paste Content</div>
+            <div class="context-menu-item" id="ctxRenameTab">
+                <i class="fas fa-i-cursor"></i> Rename Tab
+            </div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" id="ctxCopyContent">
+                <i class="fas fa-copy"></i> Copy Content
+            </div>
+            <div class="context-menu-item" id="ctxPasteContent">
+                <i class="fas fa-paste"></i> Paste Content
+            </div>
+            <div class="context-menu-item" id="ctxSaveContent">
+                <i class="fas fa-save"></i> Save to File
+            </div>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item">
+                    <i class="fas fa-code"></i>
+                    <span id="language-status">Lua</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-columns"></i>
+                    <span id="cursor-position">Ln 1, Col 1</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-font"></i>
+                    <span id="encoding-status">UTF-8</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <div class="status-item">
+                    <i class="fas fa-save"></i>
+                    <span id="saved-status">Saved</span>
+                </div>
+            </div>
         </div>
     </div>
     
     <div class="footer">
-        Made by <a href="https://discord.gg/fHVXHyKeBg" target="_blank">Cevor</a>
+        Made with <i class="fas fa-heart" style="color: #ff5555; margin: 0 4px;"></i> by 
+        <a href="https://discord.gg/FmQVmwv4qt" target="_blank">Cevor <i class="fas fa-external-link-alt"></i></a>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-message">Operation completed</span>
     </div>
 
     <script>
@@ -200,7 +450,7 @@
         let tabs = [];
         let contextMenuTabId = null;
 
-        const luaIcon = `<img src="https://icons.veryicon.com/png/o/file-type/file-type-icon-library/lua.png" alt="Lua Icon" style="width: 20px; height: 20px;" />`;
+        const luaIcon = `<img src="https://icons.veryicon.com/png/o/file-type/file-type-icon-library/lua.png" alt="Lua Icon" />`;
 
         class Tab {
             constructor(title, content = '') {
@@ -208,14 +458,50 @@
                 this.title = title;
                 this.content = content;
                 this.element = null;
+                this.saved = true;
+                this.encoding = 'UTF-8';
             }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const icon = notification.querySelector('i');
+            const messageEl = document.getElementById('notification-message');
+            
+            // Set icon based on type
+            switch(type) {
+                case 'success':
+                    icon.className = 'fas fa-check-circle';
+                    notification.style.backgroundColor = '#4CAF50';
+                    break;
+                case 'error':
+                    icon.className = 'fas fa-exclamation-circle';
+                    notification.style.backgroundColor = '#F44336';
+                    break;
+                case 'warning':
+                    icon.className = 'fas fa-exclamation-triangle';
+                    notification.style.backgroundColor = '#FF9800';
+                    break;
+                default:
+                    icon.className = 'fas fa-info-circle';
+                    notification.style.backgroundColor = '#2196F3';
+            }
+            
+            messageEl.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
 
         function saveTabs() {
             const tabsData = tabs.map(tab => ({
                 id: tab.id,
                 title: tab.title,
-                content: tab.content
+                content: tab.content,
+                saved: tab.saved,
+                encoding: tab.encoding
             }));
             localStorage.setItem('editorTabs', JSON.stringify(tabsData));
         }
@@ -226,10 +512,42 @@
                 const tabsData = JSON.parse(savedTabs);
                 tabsData.forEach(tabData => {
                     addTab(tabData.title, tabData.content, tabData.id);
+                    const tab = tabs.find(t => t.id === tabData.id);
+                    if (tab) {
+                        tab.saved = tabData.saved || true;
+                        tab.encoding = tabData.encoding || 'UTF-8';
+                    }
                 });
             } else {
-                addTab('New Tab 1', `--[[\n    Made by Cevor\n    https://discord.gg/fHVXHyKeBg\n]]`);
+                addTab('script.lua', `--[[\n    Made by Cevor\n    https://discord.gg/FmQVmwv4qt\n]]`);
             }
+        }
+
+        function updateCursorPosition() {
+            const position = editor.getPosition();
+            document.getElementById('cursor-position').textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
+        }
+
+        function updateSavedStatus(saved) {
+            const tab = tabs.find(t => t.id === currentTab);
+            if (tab) {
+                tab.saved = saved;
+                document.getElementById('saved-status').textContent = saved ? 'Saved' : 'Unsaved';
+                document.getElementById('saved-status').style.color = saved ? '' : '#FF9800';
+                saveTabs();
+            }
+        }
+
+        function showTooltip(text, x, y) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = text;
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+            tooltip.style.opacity = '1';
+            
+            setTimeout(() => {
+                tooltip.style.opacity = '0';
+            }, 2000);
         }
 
         function makeEditable(titleElement, tab) {
@@ -250,6 +568,7 @@
                 if (newTitle) {
                     tab.title = newTitle;
                     saveTabs();
+                    showNotification('Tab renamed successfully', 'success');
                 } else {
                     titleElement.textContent = tab.title;
                 }
@@ -293,6 +612,8 @@
                 e.stopPropagation();
                 if (tabs.length > 1) {
                     removeTab(tab.id);
+                } else {
+                    showTooltip('Cannot close the last tab', e.clientX, e.clientY);
                 }
             };
 
@@ -313,9 +634,9 @@
         function createNewTabButton() {
             const newTabButton = document.createElement('div');
             newTabButton.className = 'tab new-tab';
-            newTabButton.innerHTML = '+';
+            newTabButton.innerHTML = '<i class="fas fa-plus"></i>';
             newTabButton.onclick = () => {
-                const newTab = addTab('New Tab', `--[[\n    Made by Cevor\n    https://discord.gg/fHVXHyKeBg\n]]`);
+                const newTab = addTab('script.lua', `--[[\n    Made by Cevor\n    https://discord.gg/FmQVmwv4qt\n]]`);
                 // Automatically make the title editable for new tabs
                 const titleElement = newTab.element.querySelector('.tab-title');
                 makeEditable(titleElement, newTab);
@@ -341,7 +662,18 @@
 
             switchTab(tab.id);
             saveTabs();
+            showNotification(`Tab "${title}" created`, 'success');
             return tab;
+        }
+
+        function duplicateTab(tabId) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (!tab) return;
+
+            const newTitle = tab.title.replace(/(\.lua)?$/, ' - Copy$&');
+            const newTab = addTab(newTitle, tab.content);
+            showNotification(`Tab "${tab.title}" duplicated`, 'success');
+            return newTab;
         }
 
         function removeTab(tabId) {
@@ -361,7 +693,28 @@
                     switchTab(tabs[Math.min(tabIndex, tabs.length - 1)].id);
                 }
                 saveTabs();
+                showNotification(`Tab "${tab.title}" closed`, 'info');
             }, 200);
+        }
+
+        function closeTabsToTheRight(tabId) {
+            const tabIndex = tabs.findIndex(t => t.id === tabId);
+            if (tabIndex === -1 || tabIndex === tabs.length - 1) return;
+
+            const tabsToClose = tabs.slice(tabIndex + 1);
+            tabsToClose.forEach(tab => {
+                tab.element.classList.add('removing');
+                setTimeout(() => {
+                    const index = tabs.findIndex(t => t.id === tab.id);
+                    if (index !== -1) {
+                        tabs.splice(index, 1);
+                        tab.element.remove();
+                    }
+                }, 200);
+            });
+
+            saveTabs();
+            showNotification(`Closed ${tabsToClose.length} tabs to the right`, 'info');
         }
 
         function switchTab(tabId) {
@@ -386,6 +739,9 @@
                 editor.setValue(tab.content);
                 tab.element.classList.add('active');
                 currentTab = tabId;
+                updateCursorPosition();
+                updateSavedStatus(tab.saved);
+                document.getElementById('encoding-status').textContent = tab.encoding;
             }
         }
 
@@ -393,16 +749,38 @@
             let saveTimeout;
             editor.onDidChangeModelContent(() => {
                 clearTimeout(saveTimeout);
+                updateSavedStatus(false);
                 saveTimeout = setTimeout(() => {
                     if (currentTab) {
                         const tab = tabs.find(t => t.id === currentTab);
                         if (tab) {
                             tab.content = editor.getValue();
+                            updateSavedStatus(true);
                             saveTabs();
                         }
                     }
-                }, 500);
+                }, 1000);
             });
+        }
+
+        function saveToFile() {
+            if (!currentTab) return;
+            
+            const tab = tabs.find(t => t.id === currentTab);
+            if (!tab) return;
+            
+            const blob = new Blob([tab.content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = tab.title.endsWith('.lua') ? tab.title : `${tab.title}.lua`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            updateSavedStatus(true);
+            showNotification(`File "${a.download}" saved`, 'success');
         }
 
         // Context Menu Functions
@@ -423,6 +801,11 @@
             document.getElementById('ctxCloseOtherTabs').style.opacity = tabs.length > 1 ? '1' : '0.5';
             document.getElementById('ctxCloseOtherTabs').style.pointerEvents = tabs.length > 1 ? 'auto' : 'none';
             
+            // Disable "Close Right Tabs" if it's the last tab
+            const tabIndex = tabs.findIndex(t => t.id === tabId);
+            document.getElementById('ctxCloseRightTabs').style.opacity = tabIndex < tabs.length - 1 ? '1' : '0.5';
+            document.getElementById('ctxCloseRightTabs').style.pointerEvents = tabIndex < tabs.length - 1 ? 'auto' : 'none';
+            
             return false;
         }
 
@@ -436,7 +819,14 @@
             
             // Context menu actions
             document.getElementById('ctxNewTab').addEventListener('click', () => {
-                const newTab = addTab('New Tab', `--[[\n    Made by Cevor\n    https://discord.gg/fHVXHyKeBg\n]]`);
+                const newTab = addTab('script.lua', `--[[\n    Made by Cevor\n    https://discord.gg/FmQVmwv4qt\n]]`);
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxDuplicateTab').addEventListener('click', () => {
+                if (contextMenuTabId) {
+                    duplicateTab(contextMenuTabId);
+                }
                 hideContextMenu();
             });
             
@@ -458,6 +848,13 @@
                 hideContextMenu();
             });
             
+            document.getElementById('ctxCloseRightTabs').addEventListener('click', () => {
+                if (contextMenuTabId) {
+                    closeTabsToTheRight(contextMenuTabId);
+                }
+                hideContextMenu();
+            });
+            
             document.getElementById('ctxRenameTab').addEventListener('click', () => {
                 if (contextMenuTabId) {
                     const tab = tabs.find(t => t.id === contextMenuTabId);
@@ -474,6 +871,7 @@
                     const tab = tabs.find(t => t.id === contextMenuTabId);
                     if (tab) {
                         navigator.clipboard.writeText(tab.content);
+                        showNotification('Content copied to clipboard', 'success');
                     }
                 }
                 hideContextMenu();
@@ -489,12 +887,20 @@
                             if (currentTab === tab.id) {
                                 editor.setValue(text);
                             }
+                            updateSavedStatus(false);
                             saveTabs();
+                            showNotification('Content pasted from clipboard', 'success');
                         } catch (err) {
                             console.error('Failed to read clipboard:', err);
+                            showNotification('Failed to paste from clipboard', 'error');
                         }
                     }
                 }
+                hideContextMenu();
+            });
+            
+            document.getElementById('ctxSaveContent').addEventListener('click', () => {
+                saveToFile();
                 hideContextMenu();
             });
         }
@@ -531,40 +937,64 @@
                 triggerCharacters: [],
             });
 
-            monaco.editor.defineTheme('net-theme-dark', {
-    base: 'vs-dark',
-    inherit: true,
-    colors: {
-        "editor.background": '#111111', // Changed from #0f0f0f to #111111
-    },
-    rules: [
-        { token: 'global', foreground: 'fb9767', fontStyle: "bold" },
-        { token: 'keyword', foreground: 'fb9767', fontStyle: "bold" },
-        { token: 'comment', foreground: 'fed767', fontStyle: "bold" },
-        { token: 'number', foreground: 'a0d26e', fontStyle: "bold" },
-        { token: 'string', foreground: '77dbe7', fontStyle: "bold" },
-        { token: 'Method', foreground: 'ff6699' },
-        { token: 'operator', foreground: 'ff5555' },
-        { token: 'type', foreground: 'ffdd66' },
-        { token: 'variable', foreground: 'aaffff' },
-        { token: 'variable.predefined', foreground: 'aaffff', fontStyle: "italic" },
-        { token: 'constant', foreground: 'd48aff' },
-        { token: 'class', foreground: 'ff3333', fontStyle: "bold" },
-        { token: 'interface', foreground: 'ffcc66', fontStyle: "italic" },
-        { token: 'function', foreground: 'b266ff', fontStyle: "bold" },
-        { token: 'label', foreground: '66ff66', fontStyle: "italic" },
-        { token: 'predefined.type', foreground: 'ffaa33' },
-        { token: 'punctuation.bracket', foreground: 'ff33cc' },
-        { token: 'print', foreground: '00ff00', fontStyle: "bold" },
-        { token: 'if', foreground: 'ff6a00', fontStyle: "bold" }
-    ]
-});
-
-
+            monaco.editor.defineTheme('cevor-theme-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                colors: {
+                    "editor.background": '#1e1e1e',
+                    "editor.foreground": '#d4d4d4',
+                    "editor.lineHighlightBackground": '#282828',
+                    "editorLineNumber.foreground": '#5a5a5a',
+                    "editorLineNumber.activeForeground": '#c6c6c6',
+                    "editorCursor.foreground": '#ffffff',
+                    "editor.selectionBackground": '#264f78',
+                    "editor.inactiveSelectionBackground": '#3a3d41',
+                    "editorIndentGuide.background": '#404040',
+                    "editorIndentGuide.activeBackground": '#707070',
+                    "editor.selectionHighlightBackground": '#264f7833',
+                    "editor.wordHighlightBackground": '#57575740',
+                    "editor.wordHighlightStrongBackground": '#57575780',
+                    "editor.findMatchBackground": '#515c6a',
+                    "editor.findMatchHighlightBackground": '#ea5c004d',
+                    "editor.hoverHighlightBackground": '#264f7840',
+                    "editorLink.activeForeground": '#4e94ce',
+                    "editor.rangeHighlightBackground": '#ffffff0b',
+                    "editorWhitespace.foreground": '#e3e4e229',
+                    "editorWidget.background": '#252526',
+                    "editorWidget.border": '#454545',
+                    "editorSuggestWidget.background": '#252526',
+                    "editorSuggestWidget.border": '#454545',
+                    "editorSuggestWidget.selectedBackground": '#2a2d2e',
+                    "editorHoverWidget.background": '#252526',
+                    "editorHoverWidget.border": '#454545',
+                },
+                rules: [
+                    { token: 'global', foreground: 'fb9767', fontStyle: "bold" },
+                    { token: 'keyword', foreground: '569cd6', fontStyle: "bold" },
+                    { token: 'comment', foreground: '6a9955', fontStyle: "italic" },
+                    { token: 'number', foreground: 'b5cea8', fontStyle: "bold" },
+                    { token: 'string', foreground: 'ce9178', fontStyle: "bold" },
+                    { token: 'Method', foreground: 'dcdcaa' },
+                    { token: 'operator', foreground: 'd4d4d4' },
+                    { token: 'type', foreground: '4ec9b0' },
+                    { token: 'variable', foreground: '9cdcfe' },
+                    { token: 'variable.predefined', foreground: '9cdcfe', fontStyle: "italic" },
+                    { token: 'constant', foreground: 'd48aff' },
+                    { token: 'class', foreground: '4ec9b0', fontStyle: "bold" },
+                    { token: 'interface', foreground: 'b5cea8', fontStyle: "italic" },
+                    { token: 'function', foreground: 'dcdcaa', fontStyle: "bold" },
+                    { token: 'label', foreground: 'c8c8c8', fontStyle: "italic" },
+                    { token: 'predefined.type', foreground: 'ffaa33' },
+                    { token: 'punctuation.bracket', foreground: 'ff33cc' },
+                    { token: 'print', foreground: '569cd6', fontStyle: "bold" },
+                    { token: 'if', foreground: '569cd6', fontStyle: "bold" }
+                ]
+            });
 
             editor = monaco.editor.create(document.getElementById('container'), {
                 language: 'lua',
-                theme: "net-theme-dark",
+                theme: "cevor-theme-dark",
+                automaticLayout: true,
                 acceptSuggestionOnEnter: "smart",
                 cursorSmoothCaretAnimation: true,
                 suggestOnTriggerCharacters: false,
@@ -572,7 +1002,9 @@
                 folding: true,
                 dragAndDrop: true,
                 links: true,
-                minimap: { enabled: false },
+                minimap: { 
+                    enabled: false 
+                },
                 showFoldingControls: "always",
                 smoothScrolling: true,
                 stopRenderingLineAfter: 6500,
@@ -583,7 +1015,24 @@
                 formatOnPaste: true,
                 showDeprecated: true,
                 suggest: { snippetsPreventQuickSuggestions: false },
-                padding: { top: 24 }
+                padding: { top: 10 },
+                scrollBeyondLastLine: false,
+                renderWhitespace: "selection",
+                renderLineHighlight: "all",
+                quickSuggestions: { other: true, comments: false, strings: true },
+                autoClosingBrackets: "always",
+                autoIndent: "full",
+                tabSize: 4,
+                bracketPairColorization: {
+                    enabled: true,
+                    independentColorPoolPerBracketType: true
+                },
+                guides: {
+                    bracketPairs: true,
+                    bracketPairsHorizontal: true,
+                    highlightActiveBracketPair: true,
+                    highlightActiveIndentation: true
+                }
             });
 
             editor.onMouseDown((e) => {
@@ -593,6 +1042,10 @@
                         window.open(link, '_blank');
                     }
                 }
+            });
+
+            editor.onDidChangeCursorPosition(() => {
+                updateCursorPosition();
             });
 
             // Setup context menu
@@ -677,7 +1130,7 @@
 
         // C#-style CreateTab function
         window.CreateTab = function(title, content) {
-            return addTab(title || 'New Tab', content || '');
+            return addTab(title || 'script.lua', content || '');
         };
 
         window.GetText = function () {
